@@ -45,8 +45,9 @@ plot(data_pca)
 # Se grafican los 24 atletas sobre los 2 primeros ejes principales con  Biplot
 biplot(data_pca, col = c("red", "blue"))
 #La correlación entre la puntuación final de cada atleta y la primera  componente principal se calcula como
-cor(select_var$heart_disease, data_pca$x[,1])
+cor(select_var$data.heart_disease, data_pca$x[,1])
 #Finalmente, el diagrama de dispersión de la puntuación oficial dada a los  atletas y la 1a. Componente principal
-plot(select_var$heart_disease, data_pca$x[,1])
+plot(select_var$data.heart_disease, data_pca$x[,1])
 
 pca_variables <- data.frame(data_pca$x[,1],data_pca$x[,2],data_pca$x[,3],data_pca$x[,4],data_pca$x[,5],data_pca$x[,6],data_pca$x[,7],data_pca$x[,8],data_pca$x[,9])
+
