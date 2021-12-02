@@ -4,7 +4,14 @@ install.packages("dplyr")
 library(dplyr)
 install.packages("HSAUR2")
 library(HSAUR2)
+install.packages("sparklyr")
+library(sparklyr)
+install.packages("ggplot")
+library(ggplot2)
+#con esta versión si pude hacer la conección
+spark_install("2.3.1")
 
+sc<-spark_connect(master="local", version="2.3.1")
 
 data <- read.csv("healt_data.csv")
 
@@ -51,3 +58,26 @@ plot(select_var$data.heart_disease, data_pca$x[,1])
 
 pca_variables <- data.frame(data_pca$x[,1],data_pca$x[,2],data_pca$x[,3],data_pca$x[,4],data_pca$x[,5],data_pca$x[,6],data_pca$x[,7],data_pca$x[,8],data_pca$x[,9])
 
+#LOGISTIC REGRESSION
+data_spark <- sdf_copy_to(sc = sc, x=health_data, overwrite= T)
+
+start_time <- Sys.time()
+regression_model <- ml_logistic_regression(x=data_spark, response = "heart_disease", features = c("age", "avg_glucose_level", "hypertension"))
+end_time <- Sys.time()
+execution_time <- end_time - start_time
+
+roc <- validation_summary$roc() %>%
+  collect()
+ggplot(roc, aes(x = FPR, y = TPR)) + geom_line() + geom_abline(lty = "dashed")
+
+#RANDOM FOREST
+select_var <- sdf_copy_to(sc, health_data, overwrite = TRUE)
+select_var
+
+start_time <- Sys.time()
+rf_model <- ml_random_forest(select_var, response = "heart_disease", features = c("age", "avg_glucose_level", "hypertension"), type = "classification")
+end_time <- Sys.time()
+execution_time <- end_time - start_time
+
+rf_predict <- ml_predict(rf_model, select_var) %>% ft_string_indexer("heart_disease") %>% collect
+table(rf_predict$heart_disease, rf_predict$prediction)
